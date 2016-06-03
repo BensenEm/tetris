@@ -329,10 +329,7 @@ void drawFloor() {								//Zeichnet den Schacht
 					*temp == rock2.anker.koordinate||
 					*temp == rock2.b.koordinate ||
 					*temp == rock2.c.koordinate ||
-					*temp == rock2.d.koordinate /*
-					*temp == vec3(1, 1, 1)||
-					*temp == vec3(2,1,1) ||
-					*temp == vec3(3,1,1)*/)
+					*temp == rock2.d.koordinate )
 				{drawCube();
 					
 				}
@@ -480,8 +477,8 @@ int main(void)
 		Projection = glm::perspective(35.0f, 4.0f / 3.0f, 0.1f, 100.0f); //Stichpunkt: Frontplane und Backplane
 		
 		// Camera matrix, ---- hier linkshändig (manipulierbar durch erste zeile. wenn positiver z wert dann rechtshändig
-		View = glm::lookAt(glm::vec3(0,0,-5+zoom), // Camera is at (0,0,-10), in World Space
-						   glm::vec3(0,0,0),  // and looks at the origin---- bildschirmmitte
+		View = glm::lookAt(glm::vec3(0,0,-100 +zoom), // Camera is at (0,0,-10), in World Space
+						   glm::vec3(6,0,0),  // and looks at the origin---- bildschirmmitte
 						   glm::vec3(0,1,0)); // Head is up (set to 0,-1,0 to look upside-down) ---- in welche richtung gehts nach oben
 		
 		
