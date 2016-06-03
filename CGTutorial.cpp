@@ -238,7 +238,6 @@ enum color { red, blue, green, yellow, black, white, transparent };
 const int xLen = 6;
 const int yLen = 12;
 const int zLen = 6;
-
 struct cube {
 	vec3 koordinate;
 	color col;
@@ -266,8 +265,7 @@ struct cube {
 
 };
 
-
-std::vector <cube> schacht_liste;
+std::vector <cube> schacht_liste; //Brauchen wir wahrscheinllich nicht
 cube schacht_array[xLen][yLen][zLen];
 
 
@@ -307,9 +305,28 @@ struct stein {
 			break;
 		};
 	}
+
+	//Igor Turanin
+	stein stein::bewegen(char achse, int richtung) {
+
+	}
+	stein stein::drehen(char achse, int richtung) {
+		
+	}
+
+	bool stein::pruefe_ob_unten() {
+
+	}
+	void stein::kopiere_in_schacht() {
+
+	}
 };
+//stein falling;
+
+//Benjamin Molnar, Boden zeichen
 
 void drawFloor() {								//Zeichnet den Schacht
+	
 	glm::mat4 Save = Model;
 //	drawWireCube();
 	//stein rock = stein (2, blue);
@@ -477,8 +494,8 @@ int main(void)
 		Projection = glm::perspective(35.0f, 4.0f / 3.0f, 0.1f, 100.0f); //Stichpunkt: Frontplane und Backplane
 		
 		// Camera matrix, ---- hier linkshändig (manipulierbar durch erste zeile. wenn positiver z wert dann rechtshändig
-		View = glm::lookAt(glm::vec3(0,0,-100 +zoom), // Camera is at (0,0,-10), in World Space
-						   glm::vec3(6,0,0),  // and looks at the origin---- bildschirmmitte
+		View = glm::lookAt(glm::vec3(0,60,-60 +zoom), // Camera is at (0,0,-10), in World Space
+						   glm::vec3(xLen,yLen,zLen),  // and looks at the origin---- bildschirmmitte
 						   glm::vec3(0,1,0)); // Head is up (set to 0,-1,0 to look upside-down) ---- in welche richtung gehts nach oben
 		
 		
