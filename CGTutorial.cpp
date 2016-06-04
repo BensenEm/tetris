@@ -133,9 +133,257 @@ float turnZ2;
 
 float zoom;
 
+// Diese Drei Matrizen global (Singleton-Muster), damit sie jederzeit modifiziert und
+// an die Grafikkarte geschickt werden koennen
+glm::mat4 Projection;
+glm::mat4 View;
+glm::mat4 Model;
+GLuint programID;
+
+
+glm::vec3 f1(50.0 / 10.0, 2.5 / 100.0, 2.5 / 100.0);
+glm::vec3 f2(2.5 / 100.0, 50.0 / 10.0, 2.5 / 100.0);
+glm::vec3 f3(2.5 / 100.0, 2.5 / 100.0, 50.0 / 10.0);
 
 
 
+void sendMVP()
+{
+	// Our ModelViewProjection : multiplication of our 3 matrices
+	glm::mat4 MVP = Projection * View * Model;
+	// Send our transformation to the currently bound shader, 
+	// in the "MVP" uniform, konstant fuer alle Eckpunkte
+	glUniformMatrix4fv(glGetUniformLocation(programID, "M"), 1, GL_FALSE, &Model[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(programID, "V"), 1, GL_FALSE, &View[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(programID, "P"), 1, GL_FALSE, &Projection[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(programID, "MVP"), 1, GL_FALSE, &MVP[0][0]); //schick ich Matrix in Shader rein (zunächst Vertexshader)
+}
+
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------ New Code Ben
+enum color { red, blue, green, yellow, black, white, transparent };
+const int xLen = 6;
+const int yLen = 12;
+const int zLen = 6;
+struct cube {
+	vec3 koordinate;
+	color col;
+	bool exists;
+
+	cube::cube(int x, int y, int z, color c) {
+		koordinate = vec3(x, y, z);
+		col = c;
+		exists = false;
+	}
+
+	cube::cube() {
+		koordinate = vec3(0, 0, 0);
+		this->col = transparent;
+		exists = false;
+	}
+
+	vec3 getKoor() {
+		return koordinate;
+	};
+
+	void setKoor(int x, int y, int z) {
+		koordinate = vec3(x, y, z);
+	};
+
+	void cube::transform(char achse, bool uhrzeigersinn, cube* anker, vec3 *diff) {
+		//vec3 *diff = new vec3();
+		*diff = this->koordinate - anker->koordinate;
+		vec3 temp = *diff;
+
+		if (achse == 'x' && uhrzeigersinn == true) {
+			diff->y = diff->z;
+			diff->z = -1 * temp.y;
+
+		}
+		else if (achse == 'x' && uhrzeigersinn == false) {
+			diff->y = -1 * diff->z;
+			diff->z = temp.y;
+		}
+		else if (achse == 'y' && uhrzeigersinn == true) {
+			diff->x = diff->z;
+			diff->z = -1 * temp.x;
+
+		}
+		else if (achse == 'y' && uhrzeigersinn == false) {
+			diff->x = -1 * diff->z;
+			diff->z = temp.x;
+		}
+		else if (achse == 'z' && uhrzeigersinn == true) {
+			diff->y = diff->x;
+			diff->x = -1 * temp.y;
+
+		}
+		else {
+			diff->y = -1 * diff->x;
+			diff->x = temp.y;
+		};
+		//return *diff;
+	};
+};
+
+std::vector <cube> schacht_liste; //Brauchen wir wahrscheinllich nicht
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array = { { {} } };
+void initSchacht() {
+	for (int i = 0; i < xLen; i++) {
+		for (int j = 0; j < yLen; j++) {
+			for (int k = 0; k < zLen; k++) {
+				schacht_array[i][j][k] = transparent;
+			}
+		}
+	}
+};
+
+
+struct stein {
+	std::vector<cube> cube_elems;
+
+
+	stein::stein(int type, color col) {
+		switch (type) {
+		case 1: //I - stein 
+			cube_elems.push_back(cube(2, 12, 3, col));
+			cube_elems.push_back(cube(3, 12, 3, col));
+			cube_elems.push_back(cube(4, 12, 3, col));
+			cube_elems.push_back(cube(5, 12, 3, col));
+			break;
+
+		case 2: //L - stein
+			cube_elems.push_back(cube(3, 11, 3, col));
+			cube_elems.push_back(cube(3, 12, 3, col));
+			cube_elems.push_back(cube(4, 12, 3, col));
+			cube_elems.push_back(cube(5, 12, 3, col));
+			break;
+
+		case 3: //S - stein
+			cube_elems.push_back(cube(3, 11, 3, col));
+			cube_elems.push_back(cube(4, 11, 3, col));
+			cube_elems.push_back(cube(4, 12, 3, col));
+			cube_elems.push_back(cube(5, 12, 3, col));
+			break;
+
+		case 4: //O - stein
+			cube_elems.push_back(cube(3, 11, 3, col));
+			cube_elems.push_back(cube(4, 11, 3, col));
+			cube_elems.push_back(cube(3, 12, 3, col));
+			cube_elems.push_back(cube(4, 12, 3, col));
+			break;
+		};
+	}
+	stein::stein() {
+		cube_elems.push_back(cube());
+		cube_elems.push_back(cube());
+		cube_elems.push_back(cube());
+		cube_elems.push_back(cube());
+	}
+
+	//Igor Turanin
+	stein stein::bewegen(char achse, int richtung) {
+
+	}
+
+	bool stein::pruefe_ob_unten() {
+
+	}
+	void stein::kopiere_in_schacht() {			// Methode 
+		for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+			int x = it->koordinate.x;
+			int y = it->koordinate.y;
+			int z = it->koordinate.z;
+			schacht_array[x][y][z] = it->col;
+		}
+	}
+
+};
+stein *falling = new stein();
+
+void drehen(char achse, bool uhrzeigersinn) {
+	
+	vec3 *diff = new vec3();
+	cube *anker = &falling->cube_elems[0];
+	for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) {
+		it->transform(achse, uhrzeigersinn, anker, diff);
+		it->koordinate = anker->koordinate + *diff;
+	}
+	delete diff;
+
+}
+
+
+
+
+float cus = 1.;			// cube-unit-size
+float tilesize = .4;	// dicke des bodens
+void drawTiles() {
+	glm::mat4 Save = Model;
+	Model = glm::translate(Model, glm::vec3(0, -1 - tilesize, 0));
+	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
+
+	Model = glm::scale(Model, glm::vec3(1, tilesize, 1));
+	for (int i = 0; i < xLen; i++) {
+		for (int j = 0; j < zLen; j++) {
+			Model = glm::translate(Model, glm::vec3(0, 0, 2 * cus));
+			sendMVP();
+
+			drawCube();
+
+		}
+		Model = glm::translate(Model, glm::vec3(2 * cus, 0, 2 * cus*(-zLen)));
+	};
+	Model = Save;
+
+}
+
+
+void draw() {								//Zeichnet den Schacht
+
+	glm::mat4 Save = Model;
+
+	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
+	for (int y = 1; y <= yLen; y++) {
+		for (int x = 1; x <= xLen; x++) {
+			for (int z = 1; z <= zLen; z++) {
+				Model = glm::translate(Model, glm::vec3(0, 0, 2 * cus));
+				sendMVP();
+				vec3* temp = new vec3(x, y, z);
+				if (
+					*temp == falling->cube_elems[0].koordinate ||
+					*temp == falling->cube_elems[1].koordinate ||
+					*temp == falling->cube_elems[2].koordinate ||
+					*temp == falling->cube_elems[3].koordinate) {
+					drawCube();
+				}
+
+				else if (schacht_array[x - 1][y - 1][z - 1] != transparent) {
+					drawCube();
+					//drawCube(schacht_array[x][y][z].col)
+				}
+				else {
+					//	drawWireCube();
+				}
+				delete temp;
+
+			}
+			Model = glm::translate(Model, glm::vec3(2 * cus, 0, 2 * cus*(-zLen)));
+		}
+
+		Model = glm::translate(Model, glm::vec3(2 * cus*(-xLen), 2 * cus, 0));
+	};
+	//drawCubeUnit(cus);
+
+	Model = Save;
+
+}
+//class KeyboardListener {
+//	void OnKeyEvent(const KeyEvent &evt) {
+//
+//	}
+//};
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	switch (key)
@@ -195,6 +443,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	case GLFW_KEY_9:
 		turnZ2 += 2.5;
 		break;
+	case GLFW_KEY_P:
+		drehen('x', true);
+		break;
 
 	default:
 		break;
@@ -202,28 +453,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 
-// Diese Drei Matrizen global (Singleton-Muster), damit sie jederzeit modifiziert und
-// an die Grafikkarte geschickt werden koennen
-glm::mat4 Projection;
-glm::mat4 View;
-glm::mat4 Model;
-GLuint programID;
-
-void sendMVP()
-{
-	// Our ModelViewProjection : multiplication of our 3 matrices
-	glm::mat4 MVP = Projection * View * Model; 
-	// Send our transformation to the currently bound shader, 
-	// in the "MVP" uniform, konstant fuer alle Eckpunkte
-	glUniformMatrix4fv(glGetUniformLocation(programID, "M"), 1, GL_FALSE, &Model[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(programID, "V"), 1, GL_FALSE, &View[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(programID, "P"), 1, GL_FALSE, &Projection[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(programID, "MVP"), 1, GL_FALSE, &MVP[0][0]); //schick ich Matrix in Shader rein (zunächst Vertexshader)
-}
-
-glm::vec3 f1 (50.0 / 10.0, 2.5 / 100.0, 2.5 / 100.0);
-glm::vec3 f2(2.5 / 100.0, 50.0 / 10.0, 2.5 / 100.0);
-glm::vec3 f3(2.5 / 100.0, 2.5 / 100.0, 50.0 / 10.0);
 
 // Zeichnet einzelne Koordinatensystemachsen
 void drawCS(glm::vec3 factor) {
@@ -233,178 +462,7 @@ void drawCS(glm::vec3 factor) {
 	drawWireCube();
 	Model = Save; 
 }
-//------------------------------------------------------------------
-//------------------------------------------------------------------ New Code Ben
-enum color { red, blue, green, yellow, black, white, transparent };
-const int xLen = 6;
-const int yLen = 12;
-const int zLen = 6;
-struct cube {
-	vec3 koordinate;
-	color col;
-	bool exists;
 
-	cube::cube(int x, int y, int z, color c) {
-		koordinate = vec3(x, y, z);
-		col = c;
-		exists = false;
-	}
-
-	cube::cube() {
-		koordinate = vec3(0, 0, 0);
-		this->col = transparent;
-		exists = false;
-	}
-
-	vec3 getKoor() {
-		return koordinate;
-	};
-
-	void setKoor(int x, int y, int z) {
-		koordinate = vec3(x, y, z);
-	};
-
-};
-
-std::vector <cube> schacht_liste; //Brauchen wir wahrscheinllich nicht
-std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array = { { {} } };
-void initSchacht() {
-	for (int i = 0; i < xLen; i++) {
-		for (int j = 0; j < yLen; j++) {
-			for (int k = 0; k < zLen; k++) {
-				schacht_array[i][j][k] = transparent;
-			}
-		}
-	}
-};
-
-
-struct stein {
-	std::vector<cube> cube_elems;
-	
-	
-	stein::stein(int type, color col) {
-		switch (type) {
-		case 1: //I - stein 
-			cube_elems.push_back(cube(2, 12, 3, col));
-			cube_elems.push_back(cube(3, 12, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
-			cube_elems.push_back(cube(5, 12, 3, col));
-			break;
-
-		case 2: //L - stein
-			cube_elems.push_back(cube(3, 11, 3,col));
-			cube_elems.push_back(cube(3, 12, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
-			cube_elems.push_back(cube(5, 12, 3, col));
-			break;
-
-		case 3: //S - stein
-			cube_elems.push_back(cube(3, 11, 3, col));
-			cube_elems.push_back(cube(4, 11, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
-			cube_elems.push_back(cube(5, 12, 3, col));
-			break;
-
-		case 4: //O - stein
-			cube_elems.push_back(cube(3, 11, 3, col));
-			cube_elems.push_back(cube(4, 11, 3, col));
-			cube_elems.push_back(cube(3, 12, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
-			break;
-		};
-	}
-	stein::stein() {
-		cube_elems.push_back(cube());
-		cube_elems.push_back(cube());
-		cube_elems.push_back(cube());
-		cube_elems.push_back(cube());
-	}
-
-	//Igor Turanin
-	stein stein::bewegen(char achse, int richtung) {
-
-	}
-	stein stein::drehen(char achse, int richtung) {
-		
-	}
-
-	bool stein::pruefe_ob_unten() {
-
-	}
-	void stein::kopiere_in_schacht() {			// Methode 
-		for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
-			int x = it->koordinate.x;
-			int y = it->koordinate.y;
-			int z = it->koordinate.z;
-			schacht_array[x][y][z] = it->col;
-		}
-	}
-
-};
-stein * falling = new stein(3, green);
-
-//Benjamin Molnar, Boden zeichen
-float cus = 1.;			// cube-unit-size
-float tilesize = .4;	// dicke des bodens
-void drawTiles() {
-	glm::mat4 Save = Model;
-	Model = glm::translate(Model, glm::vec3(0, -1-tilesize, 0));
-	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
-
-	Model = glm::scale(Model, glm::vec3(1, tilesize, 1));
-	for (int i = 0; i < xLen; i++) {
-		for (int j = 0; j < zLen; j++) {
-			Model = glm::translate(Model, glm::vec3(0, 0, 2 * cus));
-			sendMVP();
-
-			drawCube();
-
-		}
-		Model = glm::translate(Model, glm::vec3(2 * cus, 0, 2 * cus*(-zLen)));
-	};
-	Model= Save;
-
-}
-void draw() {								//Zeichnet den Schacht
-	
-	glm::mat4 Save = Model;
-	
-	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
-	for(int y=1; y<= yLen; y++){
-		for (int x = 1; x <= xLen; x++) {
-			for (int z = 1; z <= zLen; z++) {
-				Model = glm::translate(Model, glm::vec3(0, 0, 2 * cus));
-				sendMVP();
-				vec3* temp= new vec3(x,y,z);
-				if (
-					*temp == falling->cube_elems[0].koordinate||
-					*temp == falling->cube_elems[1].koordinate ||
-					*temp == falling->cube_elems[2].koordinate ||
-					*temp == falling->cube_elems[3].koordinate ){
-					drawCube();
-				}
-				
-				else if (schacht_array[x-1][y-1][z-1]!= transparent) {
-					drawCube();
-					//drawCube(schacht_array[x][y][z].col)
-				}
-				else {
-				//	drawWireCube();
-				}
-				delete temp;
-
-			}
-			Model = glm::translate(Model, glm::vec3(2 * cus, 0, 2 * cus*(-zLen)));
-		}
-		
-		Model = glm::translate(Model, glm::vec3(2 * cus*(-xLen), 2* cus, 0));
-	};
-	//drawCubeUnit(cus);
-
-	Model = Save;
-
-}
 
 int main(void)
 {
@@ -591,6 +649,12 @@ int main(void)
 		glm::vec4 lightPos = Model*glm::vec4(0, 0.3, 0, 1);
 		glUniform3f(glGetUniformLocation(programID, "LightPosition_worldspace"), lightPos.x, lightPos.y, lightPos.z);
 */
+		falling = new stein(2, green);
+		drehen('x', true);
+		drehen('x', true);
+		drehen('x', true);
+		drehen('x', false);
+		drehen('z', false);
 		initSchacht();
 		drawTiles(); 
 		draw();
