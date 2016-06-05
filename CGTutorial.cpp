@@ -26,6 +26,7 @@ using namespace glm;
 
 // Wuerfel und Kugel
 #include "objects.hpp"
+#include <string>
 
 // Erklären ObenGL-Statemachine, lowlevel
 // Version 1: seit 1992, elegantes API für die Plattformunabhägige 3D-Programmierung 
@@ -166,6 +167,15 @@ enum color { red, blue, green, yellow, black, white, transparent };
 const int xLen = 6;
 const int yLen = 12;
 const int zLen = 6;
+
+//struct SchachtbelegtException {
+//	int message;
+//
+//	SchachtbelegtException::SchachtbelegtException() 
+//		:message(4){
+//	}
+//};
+
 struct cube {
 	vec3 koordinate;
 	color col;
@@ -290,6 +300,33 @@ struct stein {
 	bool stein::pruefe_ob_unten() {
 
 	}
+	//Prüft ob sich ein Stein innerhalb der erlaubten Spielfläche/Arena befindet
+	bool stein::inside_arena() {
+		for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+			int x = it->koordinate.x;
+			int y = it->koordinate.y;
+			int z = it->koordinate.z;
+			if (!(x, y, z >= 1 && x <= xLen && y <= yLen && z <= zLen)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	//Prüft ob ein Quadrant im Schacht/Arena frei ist. 
+	//Prüft NICHT ob der Quadrant innerhalb der Arena ist!
+	bool stein::cube_free() {
+		for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+			int x = it->koordinate.x;
+			int y = it->koordinate.y;
+			int z = it->koordinate.z;
+			if (schacht_array[x][y][z] != transparent) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	//Kopiert Stein/ Farbe des Steins in die Arenakoordinaten hinein
 	void stein::kopiere_in_schacht() {			// Methode 
 		for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 			int x = it->koordinate.x;
@@ -304,12 +341,14 @@ stein *falling = new stein();
 
 void drehen(char achse, bool uhrzeigersinn) {
 	
-	vec3 *diff = new vec3();
-	cube *anker = &falling->cube_elems[0];
-	for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) {
-		it->transform(achse, uhrzeigersinn, anker, diff);
-		it->koordinate = anker->koordinate + *diff;
+	vec3 *diff = new vec3(); //reserviert Speicher für den Differenzvektor (Ankercube - thisCube)
+	cube *anker = &falling->cube_elems[0]; //
+	for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) { //Iteriert durch alle Cubes des Steins
+		it->transform(achse, uhrzeigersinn, anker, diff);// Verändert den Differenzvektor entsprechend der gewünschten Drehung
+		it->koordinate = anker->koordinate + *diff; // Aktualisiert die Koordinaten des cubes 
+		if (true) {};
 	}
+	
 	delete diff;
 
 }
