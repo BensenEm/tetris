@@ -164,9 +164,9 @@ void sendMVP()
 //------------------------------------------------------------------
 //------------------------------------------------------------------ New Code Ben
 enum color { red, blue, green, yellow, black, white, transparent };
-const int xLen = 6;
-const int yLen = 12;
-const int zLen = 6;
+const int xLen = 12;
+const int yLen = 24;
+const int zLen = 12;
 
 //struct SchachtbelegtException {
 //	int message;
@@ -257,31 +257,31 @@ struct stein {
 	stein::stein(int type, color col) {
 		switch (type) {
 		case 1: //I - stein 
-			cube_elems.push_back(cube(2, 12, 3, col));
-			cube_elems.push_back(cube(3, 12, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
-			cube_elems.push_back(cube(5, 12, 3, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen/2, col));
+			cube_elems.push_back(cube((xLen/2), yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) + 1, yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) +2, yLen, zLen / 2, col));
 			break;
 
 		case 2: //L - stein
-			cube_elems.push_back(cube(3, 11, 3, col));
-			cube_elems.push_back(cube(3, 12, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
-			cube_elems.push_back(cube(5, 12, 3, col));
+			cube_elems.push_back(cube((xLen/2)-1, yLen-1, zLen/2, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen/2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen, zLen/2, col));
+			cube_elems.push_back(cube((xLen / 2) + 1, yLen, zLen/2, col));
 			break;
 
 		case 3: //S - stein
-			cube_elems.push_back(cube(3, 11, 3, col));
-			cube_elems.push_back(cube(4, 11, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
-			cube_elems.push_back(cube(5, 12, 3, col));
+			cube_elems.push_back(cube((xLen/2)-1, yLen-1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen-1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) + 1, yLen, zLen / 2, col));
 			break;
 
 		case 4: //O - stein
-			cube_elems.push_back(cube(3, 11, 3, col));
-			cube_elems.push_back(cube(4, 11, 3, col));
-			cube_elems.push_back(cube(3, 12, 3, col));
-			cube_elems.push_back(cube(4, 12, 3, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen-1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen-1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen, zLen / 2, col));
 			break;
 		};
 	}
@@ -292,10 +292,37 @@ struct stein {
 		cube_elems.push_back(cube());
 	}
 
-	//Igor Turanin
-	stein stein::bewegen(char achse, int richtung) {
-
+	//
+	void stein::bewegen(char achse, int richtung) {
+		switch (achse) {
+		case('x'):
+			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+				it->koordinate.x += richtung;
+			}
+			if (inside_arena() == false || cube_free() == false) {
+				for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+					it->koordinate.x -= richtung;
+				}
+			}
+			break;
+		case('y'):
+			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+				it->koordinate.y += richtung;
+			}
+			break;
+		case ('z'):
+			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+				it->koordinate.z += richtung;
+			}
+			if (inside_arena() == false || cube_free() == false) {
+				for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
+					it->koordinate.z -= richtung;
+				}
+			}
+			break;
+		}
 	}
+	
 
 	bool stein::pruefe_ob_unten() {
 
@@ -319,7 +346,7 @@ struct stein {
 			int x = it->koordinate.x;
 			int y = it->koordinate.y;
 			int z = it->koordinate.z;
-			if (schacht_array[x][y][z] != transparent) {
+			if (schacht_array[x-1][y-1][z-1] != transparent) {
 				return false;
 			}
 		}
@@ -332,13 +359,12 @@ struct stein {
 			int x = it->koordinate.x;
 			int y = it->koordinate.y;
 			int z = it->koordinate.z;
-			schacht_array[x][y][z] = it->col;
+			schacht_array[x-1][y-1][z-1] = it->col;
 		}
 	}
 
 };
-stein *falling = new stein();
-
+stein *falling = new stein(2,green);
 void drehen(char achse, bool uhrzeigersinn) {
 	
 	vec3 *diff = new vec3(); //reserviert Speicher für den Differenzvektor (Ankercube - thisCube)
@@ -361,7 +387,7 @@ float tilesize = .4;	// dicke des bodens
 void drawTiles() {
 	glm::mat4 Save = Model;
 	Model = glm::translate(Model, glm::vec3(0, -1 - tilesize, 0));
-	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
+	//Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
 
 	Model = glm::scale(Model, glm::vec3(1, tilesize, 1));
 	for (int i = 0; i < xLen; i++) {
@@ -377,13 +403,32 @@ void drawTiles() {
 	Model = Save;
 
 }
+float wallsize = .1;
+void drawWallX() {
+	glm::mat4 Save = Model;
+	Model = glm::translate(Model, glm::vec3(0, 0,0));
+	//Model = glm::rotate(Model, -45.0f, glm::vec3(0, 1, 0));
+	Model = glm::scale(Model, glm::vec3(1, 1, wallsize));
+	for (int i = 0; i < yLen; i++) {
+		for (int j = 0; j < xLen; j++) {
+			Model = glm::translate(Model, glm::vec3(2 * cus, 0, 0));
+			sendMVP();
+
+			drawWireCube();
+
+		}
+		Model = glm::translate(Model, glm::vec3(2 * cus*(-xLen), 2*cus, 0));
+	};
+	Model = Save;
+
+}
 
 
 void draw() {								//Zeichnet den Schacht
 
 	glm::mat4 Save = Model;
 
-	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
+//	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
 	for (int y = 1; y <= yLen; y++) {
 		for (int x = 1; x <= xLen; x++) {
 			for (int z = 1; z <= zLen; z++) {
@@ -431,20 +476,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, GL_TRUE);
 		break;
 	case GLFW_KEY_RIGHT:
-		//turnY += 2.5;
+		falling->bewegen('x', 1);
 		break;
 	case GLFW_KEY_LEFT:
-		turnXg += 2.5;
+		falling->bewegen('x', -1);
 		break;
 	case GLFW_KEY_UP:
-		turnZg += 2.5;
+		falling->bewegen('z',1);
 		break;
 	case GLFW_KEY_DOWN:
-		turnYg += 2.5;
+		falling->bewegen('z', -1);
 		break;
 	case GLFW_KEY_A:
-		break;
-	case GLFW_KEY_D:
 		break;
 	case GLFW_KEY_W:
 		zoom += 1.5;
@@ -482,8 +525,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	case GLFW_KEY_9:
 		turnZ2 += 2.5;
 		break;
-	case GLFW_KEY_P:
+	case GLFW_KEY_E:
 		drehen('x', true);
+		break;
+	case GLFW_KEY_D:
+		drehen('x', false);
+		break;
+	case GLFW_KEY_R:
+		drehen('y', true);
+		break;
+	case GLFW_KEY_F:
+		drehen('y', false);
+		break;
+	case GLFW_KEY_T:
+		drehen('z', true);
+		break;
+	case GLFW_KEY_G:
+		drehen('z', false);
 		break;
 
 	default:
@@ -619,7 +677,7 @@ int main(void)
 
 	// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(glGetUniformLocation(programID, "myTextureSampler"), 0);
-
+	initSchacht();
 	// Eventloop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -628,11 +686,11 @@ int main(void)
 		
 
 		// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-		Projection = glm::perspective(35.0f, 4.0f / 3.0f, 0.1f, 100.0f); //Stichpunkt: Frontplane und Backplane
+		Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f); //Stichpunkt: Frontplane und Backplane
 		
 		// Camera matrix, ---- hier linkshändig (manipulierbar durch erste zeile. wenn positiver z wert dann rechtshändig
 		View = glm::lookAt(glm::vec3(0,60,-60 +zoom), // Camera is at (0,0,-10), in World Space
-						   glm::vec3(xLen,yLen,zLen),  // and looks at the origin---- bildschirmmitte
+						   glm::vec3(xLen,yLen/4,zLen),  // and looks at the origin---- bildschirmmitte
 						   glm::vec3(0,1,0)); // Head is up (set to 0,-1,0 to look upside-down) ---- in welche richtung gehts nach oben
 		
 		
@@ -688,16 +746,10 @@ int main(void)
 		glm::vec4 lightPos = Model*glm::vec4(0, 0.3, 0, 1);
 		glUniform3f(glGetUniformLocation(programID, "LightPosition_worldspace"), lightPos.x, lightPos.y, lightPos.z);
 */
-		falling = new stein(2, green);
-		drehen('x', true);
-		drehen('x', true);
-		drehen('x', true);
-		drehen('x', false);
-		drehen('z', false);
-		initSchacht();
-		drawTiles(); 
-		draw();
 		
+		drawTiles(); 
+		drawWallX();
+		draw();
 		//drawCube();
 
 	
@@ -714,6 +766,7 @@ int main(void)
 	glDeleteBuffers(1, &uvbuffer);
 	glDeleteTextures(1, &Texture);
 	glDeleteProgram(programID);
+	delete falling;
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
 	return 0;
