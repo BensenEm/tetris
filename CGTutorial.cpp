@@ -299,7 +299,7 @@ struct stein {
 			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 				it->koordinate.x += richtung;
 			}
-			if (inside_arena() == false ) {
+			if (inside_arena() == false || cube_free()==false ) {
 				for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 					it->koordinate.x -= richtung;
 				}
@@ -363,21 +363,23 @@ struct stein {
 		}
 	}
 
-};
-stein *falling = new stein(2,green);
-void drehen(char achse, bool uhrzeigersinn) {
-	
-	vec3 *diff = new vec3(); //reserviert Speicher für den Differenzvektor (Ankercube - thisCube)
-	cube *anker = &falling->cube_elems[0]; //
-	for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) { //Iteriert durch alle Cubes des Steins
-		it->transform(achse, uhrzeigersinn, anker, diff);// Verändert den Differenzvektor entsprechend der gewünschten Drehung
-		it->koordinate = anker->koordinate + *diff; // Aktualisiert die Koordinaten des cubes 
-		if (true) {};
-	}
-	
-	delete diff;
+	void stein::drehen(char achse, bool uhrzeigersinn) {
 
-}
+		vec3 *diff = new vec3(); //reserviert Speicher für den Differenzvektor (Ankercube - thisCube)
+		cube *anker = &this->cube_elems[0]; //
+		for (std::vector<cube>::iterator it=cube_elems.begin(); it != cube_elems.end(); ++it) { //Iteriert durch alle Cubes des Steins
+			it->transform(achse, uhrzeigersinn, anker, diff);// Verändert den Differenzvektor entsprechend der gewünschten Drehung
+			it->koordinate = anker->koordinate + *diff; // Aktualisiert die Koordinaten des cubes 
+		}
+		delete diff;
+		if (inside_arena() == false || cube_free() == false) {
+			drehen(achse, !uhrzeigersinn);
+			}
+		
+	}
+
+};
+stein *falling = new stein(2, green);
 
 
 
@@ -526,22 +528,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		turnZ2 += 2.5;
 		break;
 	case GLFW_KEY_E:
-		drehen('x', true);
+		falling->drehen('x', true);
 		break;
 	case GLFW_KEY_D:
-		drehen('x', false);
+		falling->drehen('x', false);
 		break;
 	case GLFW_KEY_R:
-		drehen('y', true);
+		falling->drehen('y', true);
 		break;
 	case GLFW_KEY_F:
-		drehen('y', false);
+		falling->drehen('y', false);
 		break;
 	case GLFW_KEY_T:
-		drehen('z', true);
+		falling->drehen('z', true);
 		break;
 	case GLFW_KEY_G:
-		drehen('z', false);
+		falling->drehen('z', false);
 		break;
 
 	default:
