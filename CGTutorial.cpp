@@ -299,7 +299,7 @@ struct stein {
 			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 				it->koordinate.x += richtung;
 			}
-			if (inside_arena() == false || cube_free() == false) {
+			if (inside_arena() == false ) {
 				for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 					it->koordinate.x -= richtung;
 				}
@@ -333,7 +333,7 @@ struct stein {
 			int x = it->koordinate.x;
 			int y = it->koordinate.y;
 			int z = it->koordinate.z;
-			if (!(x, y, z >= 1 && x <= xLen && y <= yLen && z <= zLen)) {
+			if (!(x >= 1 && y>=1 && z>=1  && x <= xLen && y <= yLen && z <= zLen)) {
 				return false;
 			}
 		}
