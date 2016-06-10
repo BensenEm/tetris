@@ -190,7 +190,7 @@ struct cube {
 	}
 
 	cube::cube() {
-		koordinate = vec3(0, 0, 0);
+		koordinate = vec3(xLen, yLen, zLen);
 		this->col = transparent;
 		exists = false;
 	}
@@ -259,29 +259,29 @@ struct stein {
 	stein::stein(int type, color col) {
 		switch (type) {
 		case 1: //I - stein 
-			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen/2, col));
-			cube_elems.push_back(cube((xLen/2), yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen, zLen / 2, col));
 			cube_elems.push_back(cube((xLen / 2) + 1, yLen, zLen / 2, col));
-			cube_elems.push_back(cube((xLen / 2) +2, yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) + 2, yLen, zLen / 2, col));
 			break;
 
 		case 2: //L - stein
-			cube_elems.push_back(cube((xLen/2)-1, yLen-1, zLen/2, col));
-			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen/2, col));
-			cube_elems.push_back(cube((xLen / 2), yLen, zLen/2, col));
-			cube_elems.push_back(cube((xLen / 2) + 1, yLen, zLen/2, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen - 1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) + 1, yLen, zLen / 2, col));
 			break;
 
 		case 3: //S - stein
-			cube_elems.push_back(cube((xLen/2)-1, yLen-1, zLen / 2, col));
-			cube_elems.push_back(cube((xLen / 2), yLen-1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen - 1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen - 1, zLen / 2, col));
 			cube_elems.push_back(cube((xLen / 2), yLen, zLen / 2, col));
 			cube_elems.push_back(cube((xLen / 2) + 1, yLen, zLen / 2, col));
 			break;
 
 		case 4: //O - stein
-			cube_elems.push_back(cube((xLen / 2) - 1, yLen-1, zLen / 2, col));
-			cube_elems.push_back(cube((xLen / 2), yLen-1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2) - 1, yLen - 1, zLen / 2, col));
+			cube_elems.push_back(cube((xLen / 2), yLen - 1, zLen / 2, col));
 			cube_elems.push_back(cube((xLen / 2) - 1, yLen, zLen / 2, col));
 			cube_elems.push_back(cube((xLen / 2), yLen, zLen / 2, col));
 			break;
@@ -301,13 +301,13 @@ struct stein {
 			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 				it->koordinate.x += richtung;
 			}
-			if (inside_arena() == false || cube_free()==false ) {
+			if (inside_arena() == false || cube_free() == false) {
 				for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 					it->koordinate.x -= richtung;
 				}
 			}
 			break;
-		
+
 		case ('z'):
 			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 				it->koordinate.z += richtung;
@@ -320,7 +320,7 @@ struct stein {
 			break;
 		}
 	}
-	
+
 
 	bool stein::pruefe_ob_unten() {
 
@@ -331,7 +331,7 @@ struct stein {
 			int x = it->koordinate.x;
 			int y = it->koordinate.y;
 			int z = it->koordinate.z;
-			if (!(x >= 1 && y>=1 && z>=1  && x <= xLen && y <= yLen && z <= zLen)) {
+			if (!(x >= 1 && y >= 1 && z >= 1 && x <= xLen && y <= yLen && z <= zLen)) {
 				return false;
 			}
 		}
@@ -344,20 +344,20 @@ struct stein {
 			int x = it->koordinate.x;
 			int y = it->koordinate.y;
 			int z = it->koordinate.z;
-			if (schacht_array[x-1][y-1][z-1] != transparent) {
+			if (schacht_array[x - 1][y - 1][z - 1] != transparent) {
 				return false;
 			}
 		}
 		return true;
 	}
-	
+
 	//Kopiert Stein/ Farbe des Steins in die Arenakoordinaten hinein
 	void stein::kopiere_in_schacht() {			// Methode 
 		for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 			int x = it->koordinate.x;
 			int y = it->koordinate.y;
 			int z = it->koordinate.z;
-			schacht_array[x-1][y-1][z-1] = it->col;
+			schacht_array[x - 1][y - 1][z - 1] = it->col;
 		}
 	}
 
@@ -365,23 +365,23 @@ struct stein {
 
 		vec3 *diff = new vec3(); //reserviert Speicher für den Differenzvektor (Ankercube - thisCube)
 		cube *anker = &this->cube_elems[0]; //
-		for (std::vector<cube>::iterator it=cube_elems.begin(); it != cube_elems.end(); ++it) { //Iteriert durch alle Cubes des Steins
+		for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) { //Iteriert durch alle Cubes des Steins
 			it->transform(achse, uhrzeigersinn, anker, diff);// Verändert den Differenzvektor entsprechend der gewünschten Drehung
 			it->koordinate = anker->koordinate + *diff; // Aktualisiert die Koordinaten des cubes 
 		}
 		delete diff;
 		if (inside_arena() == false || cube_free() == false) {
 			drehen(achse, !uhrzeigersinn);
-			}
-		
+		}
+
 	}
 
 };
-stein *falling = new stein(2, blue);
+stein *falling = new stein();
 
 
-void dropStein( int value) {
-	
+void dropStein(int value) {
+
 	for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) {
 		it->koordinate.y += value;
 	}
@@ -398,8 +398,8 @@ void dropStein( int value) {
 }
 void turboDrop() {
 	for (int i = 0; i < yLen; i++) {
-	//	while (falling->inside_arena() == true || falling->cube_free() == true) {
-			dropStein(-1);
+		//	while (falling->inside_arena() == true || falling->cube_free() == true) {
+		dropStein(-1);
 		//}
 		break;
 	}
@@ -407,19 +407,21 @@ void turboDrop() {
 
 
 float cus = 1.;			// cube-unit-size
-float tilesize = .4;	// dicke des bodens
+float tilesize = .005;	// dicke des bodens
 void drawTiles() {
 	glm::mat4 Save = Model;
-	Model = glm::translate(Model, glm::vec3(0, -1 - tilesize, 0));
+	Model = glm::translate(Model, glm::vec3(0, -cus - tilesize, 0));
 	//Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
 
 	Model = glm::scale(Model, glm::vec3(1, tilesize, 1));
 	for (int i = 0; i < xLen; i++) {
 		for (int j = 0; j < zLen; j++) {
+
 			Model = glm::translate(Model, glm::vec3(0, 0, 2 * cus));
 			sendMVP();
-
 			drawCube();
+
+
 
 		}
 		Model = glm::translate(Model, glm::vec3(2 * cus, 0, 2 * cus*(-zLen)));
@@ -430,7 +432,7 @@ void drawTiles() {
 float wallsize = .1;
 void drawWallX() {
 	glm::mat4 Save = Model;
-	Model = glm::translate(Model, glm::vec3(0, 0,0));
+	Model = glm::translate(Model, glm::vec3(0, 0, 0));
 	//Model = glm::rotate(Model, -45.0f, glm::vec3(0, 1, 0));
 	Model = glm::scale(Model, glm::vec3(1, 1, wallsize));
 	for (int i = 0; i < yLen; i++) {
@@ -441,10 +443,41 @@ void drawWallX() {
 			drawWireCube();
 
 		}
-		Model = glm::translate(Model, glm::vec3(2 * cus*(-xLen), 2*cus, 0));
+		Model = glm::translate(Model, glm::vec3(2 * cus*(-xLen), 2 * cus, 0));
 	};
 	Model = Save;
 
+}
+void completeLines() {
+	std::vector<vec2> xLines;
+	std::vector<vec2> zLines;
+	int xline = 0;
+	int zline = 0;
+	for (int y = 1; y <= yLen; y++) {
+		for (int x = 1; x <= xLen; x++) {
+			for (int z = 1; z <= zLen; z++) {
+				if (schacht_array[x][y][z] != transparent) {
+					zline += 1;
+				}
+				if (zline == zLen) {
+					zLines.push_back(vec2(x, y));
+				}
+			}
+		}
+	}
+
+	for (int y = 1; y <= yLen; y++) {
+		for (int x = 1; x <= zLen; x++) {
+			for (int z = 1; z <= xLen; z++) {
+				if (schacht_array[x][y][z] != transparent) {
+					xline += 1;
+				}
+				if (xline == xLen) {
+					xLines.push_back(vec2(y,z));
+				}
+			}
+		}
+	}
 }
 
 
@@ -452,7 +485,7 @@ void draw() {								//Zeichnet den Schacht
 
 	glm::mat4 Save = Model;
 
-//	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
+	//	Model = glm::rotate(Model, 45.0f, glm::vec3(0, 1, 0));
 	for (int y = 1; y <= yLen; y++) {
 		for (int x = 1; x <= xLen; x++) {
 			for (int z = 1; z <= zLen; z++) {
@@ -494,23 +527,9 @@ void draw() {								//Zeichnet den Schacht
 //};
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+
 	switch (key)
 	{
-	case GLFW_KEY_ESCAPE:
-		glfwSetWindowShouldClose(window, GL_TRUE);
-		break;
-	case GLFW_KEY_RIGHT:
-		falling->bewegen('x', 1);
-		break;
-	case GLFW_KEY_LEFT:
-		falling->bewegen('x', -1);
-		break;
-	case GLFW_KEY_UP:
-		falling->bewegen('z',1);
-		break;
-	case GLFW_KEY_DOWN:
-		falling->bewegen('z', -1);
-		break;
 	case GLFW_KEY_A:
 		break;
 	case GLFW_KEY_W:
@@ -520,58 +539,80 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		zoom -= 1.5;
 		break;
 	case GLFW_KEY_Q:
-		turnXg= turnYg = turnZg = turnX = turnY = turnZ = turnX1 = turnY1 = turnZ1 = turnX2 = turnY2 = turnZ2 = 0.0;
+		turnXg = turnYg = turnZg = turnX = turnY = turnZ = turnX1 = turnY1 = turnZ1 = turnX2 = turnY2 = turnZ2 = 0.0;
 		break;
 	case GLFW_KEY_1:
 		turnX += 2.5;
 		break;
 	case GLFW_KEY_2:
-		turnY += 2.5;
+		turnX -= 2.5;
 		break;
 	case GLFW_KEY_3:
-		turnZ += 2.5;
+		turnY += 2.5;
 		break;
 	case GLFW_KEY_4:
-		turnX1 += 2.5;
+		turnY -= 2.5;
 		break;
 	case GLFW_KEY_5:
-		turnY1 += 2.5;
+		turnZ += 2.5;
 		break;
 	case GLFW_KEY_6:
-		turnZ1 += 2.5;
+		turnZ -= 2.5;
 		break;
 	case GLFW_KEY_7:
-		turnX2 += 2.5;
+		zoom += 2.5;
 		break;
 	case GLFW_KEY_8:
-		turnY2 += 2.5;
+		zoom -= 2.5;
 		break;
 	case GLFW_KEY_9:
-		turnZ2 += 2.5;
-		break;
-	case GLFW_KEY_E:
-		falling->drehen('x', true);
-		break;
-	case GLFW_KEY_D:
-		falling->drehen('x', false);
-		break;
-	case GLFW_KEY_R:
-		falling->drehen('y', true);
-		break;
-	case GLFW_KEY_F:
-		falling->drehen('y', false);
-		break;
-	case GLFW_KEY_T:
-		falling->drehen('z', true);
-		break;
-	case GLFW_KEY_G:
-		falling->drehen('z', false);
 		break;
 	case GLFW_KEY_O:
 		turboDrop();
 		break;
-	default:
-		break;
+	}
+
+	if (action == GLFW_PRESS) {
+		switch (key) {
+
+		case GLFW_KEY_ESCAPE:
+			glfwSetWindowShouldClose(window, GL_TRUE);
+			break;
+		case GLFW_KEY_RIGHT:
+			falling->bewegen('x', 1);
+			break;
+		case GLFW_KEY_LEFT:
+			falling->bewegen('x', -1);
+			break;
+		case GLFW_KEY_UP:
+			falling->bewegen('z', 1);
+			break;
+		case GLFW_KEY_DOWN:
+			falling->bewegen('z', -1);
+			break;
+
+		case GLFW_KEY_E:
+			falling->drehen('x', true);
+			break;
+		case GLFW_KEY_D:
+			falling->drehen('x', false);
+			break;
+		case GLFW_KEY_R:
+			falling->drehen('y', true);
+			break;
+		case GLFW_KEY_F:
+			falling->drehen('y', false);
+			break;
+		case GLFW_KEY_T:
+			falling->drehen('z', true);
+			break;
+		case GLFW_KEY_G:
+			falling->drehen('z', false);
+			break;
+
+		default:
+			break;
+		}
 	}
 }
 
@@ -583,7 +624,7 @@ void drawCS(glm::vec3 factor) {
 	Model = glm::scale(Model, factor);
 	sendMVP();
 	drawWireCube();
-	Model = Save; 
+	Model = Save;
 }
 
 
@@ -603,10 +644,10 @@ int main(void)
 	// Open a window and create its OpenGL context
 	// glfwWindowHint vorher aufrufen, um erforderliche Resourcen festzulegen
 	GLFWwindow* window = glfwCreateWindow(1024, // Breite
-										  768,  // Hoehe
-										  "CG - Tutorial", // Ueberschrift
-										  NULL,  // windowed mode
-										  NULL); // shared windoe
+		768,  // Hoehe
+		"CG - Tutorial", // Ueberschrift
+		NULL,  // windowed mode
+		NULL); // shared windoe
 
 	if (!window)
 	{
@@ -615,7 +656,7 @@ int main(void)
 	}
 
 	// Make the window's context current (wird nicht automatisch gemacht)
-    glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(window);
 
 	// Initialize GLEW
 	// GLEW ermöglicht Zugriff auf OpenGL-API > 1.1
@@ -626,8 +667,8 @@ int main(void)
 		fprintf(stderr, "Failed to initialize GLEW\n");
 		return -1;
 	}
-	
-		
+
+
 	//HIER GEHTS EIGENTLICH LOS
 
 	std::vector<glm::vec3> vertices; //Punkte
@@ -635,7 +676,7 @@ int main(void)
 	std::vector<glm::vec3> normals; //Normalenvektoren
 	bool res = loadOBJ("teapot.obj", vertices, uvs, normals);
 	glm::vec3 lightPos = glm::vec3(4, 4, -2);
-	
+
 
 
 	// Jedes Objekt eigenem VAO zuordnen, damit mehrere Objekte moeglich sind
@@ -677,7 +718,7 @@ int main(void)
 
 	// Load the texture
 	GLuint Texture = loadBMP_custom("mandrill.bmp");
-	
+
 	// Auf Keyboard-Events reagieren
 	glfwSetKeyCallback(window, key_callback);
 
@@ -687,7 +728,7 @@ int main(void)
 	// Create and compile our GLSL program from the shaders
 //	programID = LoadShaders("TransformVertexShader.vertexshader","ColorFragmentShader.fragmentshader");
 	programID = LoadShaders("StandardShading.vertexshader", "StandardShading.fragmentshader");
-	
+
 	// Shader auch benutzen !
 	glUseProgram(programID);
 
@@ -699,12 +740,11 @@ int main(void)
 
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, Texture);
+	//	glBindTexture(GL_TEXTURE_2D, Texture);
 
-	// Set our "myTextureSampler" sampler to user Texture Unit 0
+		// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(glGetUniformLocation(programID, "myTextureSampler"), 0);
 	initSchacht();
-	falling->kopiere_in_schacht();
 	time_t start = time(0);
 	time_t end;
 	double timeStep = .8;
@@ -713,73 +753,74 @@ int main(void)
 	while (!glfwWindowShouldClose(window))
 	{
 		// Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 		// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 		Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f); //Stichpunkt: Frontplane und Backplane
-		
+
 		// Camera matrix, ---- hier linkshändig (manipulierbar durch erste zeile. wenn positiver z wert dann rechtshändig
-		View = glm::lookAt(glm::vec3(0, 0,-60 +zoom), // Camera is at (0,0,-10), in World Space
-						   glm::vec3(xLen,-2,zLen),  // and looks at the origin---- bildschirmmitte
-						   glm::vec3(0,1,0)); // Head is up (set to 0,-1,0 to look upside-down) ---- in welche richtung gehts nach oben
-		
-		
-		// Model matrix : an identity matrix (model will be at the origin) erzeugt 4x4 Einheitsmatrix
+		View = glm::lookAt(glm::vec3(40 + zoom, 20, 40 + zoom), // Camera is at (0,0,-10), in World Space
+			glm::vec3(0, 0, 0),  // and looks at the origin---- bildschirmmitte
+			glm::vec3(0, 1, 0)); // Head is up (set to 0,-1,0 to look upside-down) ---- in welche richtung gehts nach oben
+
+
+// Model matrix : an identity matrix (model will be at the origin) erzeugt 4x4 Einheitsmatrix
 		Model = glm::mat4(1.0f);
 		Model = glm::rotate(Model, turnY, glm::vec3(0, 1, 0));
 		Model = glm::rotate(Model, turnX, glm::vec3(1, 0, 0));
 		Model = glm::rotate(Model, turnZ, glm::vec3(0, 0, 1));
-		Model = glm::rotate(Model, turnYg, glm::vec3(0, 1, 0));
-		Model = glm::rotate(Model, turnXg, glm::vec3(1, 0, 0));
-		Model = glm::rotate(Model, turnZg, glm::vec3(0, 0, 1));
+		//	Hier wird die Position des Objekts verschoben
+		Model = glm::translate(Model, glm::vec3(0, 0, -2 * cus));
+		Model = glm::translate(Model, glm::vec3(-xLen *cus + cus, 0, -zLen *cus + cus)); // Hier wird die Position des Objekts verschoben
 
 		glm::mat4 Save = Model;
-	//	Model = glm::translate(Model, glm::vec3(0.0, 1.25, 0.0)); // Hier wird die Position des Objekts verschoben
-	//	Model = glm::scale(Model, glm::vec3(1.0 / 1000.0, 1.0 / 1000.0, 1.0 / 1000.0));
+		//	Model = glm::scale(Model, glm::vec3(1.0 / 1000.0, 1.0 / 1000.0, 1.0 / 1000.0));
 
-	//
+		//
 
-	//	
-	//	// sendet Projection, Model, View an Grafikkarte
-	//	// Hier kommt der Teapot rein
-	//	//glBindVertexArray(VertexArrayIDTeapot);
-	//	//glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-	//	Model = Save;
+		//	
+		//	// sendet Projection, Model, View an Grafikkarte
+		//	// Hier kommt der Teapot rein
+		//	//glBindVertexArray(VertexArrayIDTeapot);
+		//	//glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		//	Model = Save;
 		sendMVP();
-	//	drawCube();		//oder 
-	//	
-	//	//drawWireCube();
-	//	
-	//	// Hier kommt die Kugeldazu
-	//	Model = Save;
-	//	Model = glm::scale(Model, glm::vec3(0.5, 0.5, 0.5));
-	//	sendMVP();
-	//	//drawSphere(10, 10);
-	//	drawCS(f1);
-	//	drawCS(f2);
-	//	drawCS(f3);
+		//	drawCube();		//oder 
+		//	
+		//	//drawWireCube();
+		//	
+		//	// Hier kommt die Kugeldazu
+		//	Model = Save;
+		//	Model = glm::scale(Model, glm::vec3(0.5, 0.5, 0.5));
+		//	sendMVP();
+		//	//drawSphere(10, 10);
+		//	drawCS(f1);
+		//	drawCS(f2);
+		//	drawCS(f3);
+
+			/*Model = glm::rotate(Model, turnY, glm::vec3(0, 1, 0));
+			Model = glm::rotate(Model, turnX, glm::vec3(1, 0, 0));
+			Model = glm::rotate(Model, turnZ, glm::vec3(0, 0, 1));
+			drawRobSeg(0.5);
+			Model= glm::translate(Model, glm::vec3(0, 0.5, 0));
+			Model = glm::rotate(Model, turnY1, glm::vec3(0, 1, 0));
+			Model = glm::rotate(Model, turnX1, glm::vec3(1, 0, 0));
+			Model = glm::rotate(Model, turnZ1, glm::vec3(0, 0, 1));
+			drawRobSeg(0.4);
+			Model= glm::translate(Model, glm::vec3(0, 0.4, 0));
+			Model = glm::rotate(Model, turnY2, glm::vec3(0, 1, 0));
+			Model = glm::rotate(Model, turnX2, glm::vec3(1, 0, 0));
+			Model = glm::rotate(Model, turnZ2, glm::vec3(0, 0, 1));
+			drawRobSeg(0.3);
+			glm::vec4 lightPos = Model*glm::vec4(0, 0.3, 0, 1);
+			glUniform3f(glGetUniformLocation(programID, "LightPosition_worldspace"), lightPos.x, lightPos.y, lightPos.z);
+	*/
+
 		
-		/*Model = glm::rotate(Model, turnY, glm::vec3(0, 1, 0));
-		Model = glm::rotate(Model, turnX, glm::vec3(1, 0, 0));
-		Model = glm::rotate(Model, turnZ, glm::vec3(0, 0, 1));
-		drawRobSeg(0.5);
-		Model= glm::translate(Model, glm::vec3(0, 0.5, 0));
-		Model = glm::rotate(Model, turnY1, glm::vec3(0, 1, 0));
-		Model = glm::rotate(Model, turnX1, glm::vec3(1, 0, 0));
-		Model = glm::rotate(Model, turnZ1, glm::vec3(0, 0, 1));
-		drawRobSeg(0.4);
-		Model= glm::translate(Model, glm::vec3(0, 0.4, 0));
-		Model = glm::rotate(Model, turnY2, glm::vec3(0, 1, 0));
-		Model = glm::rotate(Model, turnX2, glm::vec3(1, 0, 0));
-		Model = glm::rotate(Model, turnZ2, glm::vec3(0, 0, 1));
-		drawRobSeg(0.3);
-		glm::vec4 lightPos = Model*glm::vec4(0, 0.3, 0, 1);
-		glUniform3f(glGetUniformLocation(programID, "LightPosition_worldspace"), lightPos.x, lightPos.y, lightPos.z);
-*/
-		
-		drawTiles(); 
-		drawWallX();
+		//	drawWallX();
+		drawTiles();
+
 		draw();
 		end = time(0);
 		if (end - start > timeStep) {
@@ -788,14 +829,14 @@ int main(void)
 		}
 		//drawCube();
 
-	
+
 		// Swap buffers
 		glfwSwapBuffers(window);
 
 		// Poll for and process events 
-        glfwPollEvents();
-		
-	} 
+		glfwPollEvents();
+
+	}
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &normalbuffer);
 
