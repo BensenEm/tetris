@@ -105,8 +105,8 @@ static void createCube()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW); //schreibt die Vertexdaten in die Grafikkarte
 
 	// One color for each vertex. They were generated randomly.
-	static const GLfloat g_color_buffer_data[] = { 
-		0.583f,  0.771f,  0.014f,   0.609f,  0.115f,  0.436f,   0.327f,  0.483f,  0.844f,
+	static const GLfloat g_uv_buffer_data[] = { 
+		/*0.583f,  0.771f,  0.014f,   0.609f,  0.115f,  0.436f,   0.327f,  0.483f,  0.844f,
 		0.822f,  0.569f,  0.201f,   0.435f,  0.602f,  0.223f,   0.310f,  0.747f,  0.185f,
 		0.597f,  0.770f,  0.761f,   0.559f,  0.436f,  0.730f,   0.359f,  0.583f,  0.152f,
 		0.483f,  0.596f,  0.789f,   0.559f,  0.861f,  0.639f,   0.195f,  0.548f,  0.859f,
@@ -117,12 +117,25 @@ static void createCube()
 		0.055f,  0.953f,  0.042f,	0.714f,  0.505f,  0.345f,	0.783f,  0.290f,  0.734f,
 		0.722f,  0.645f,  0.174f,	0.302f,  0.455f,  0.848f,	0.225f,  0.587f,  0.040f,
 		0.517f,  0.713f,  0.338f,	0.053f,  0.959f,  0.120f,	0.393f,  0.621f,  0.362f,
-		0.673f,  0.211f,  0.457f,	0.820f,  0.883f,  0.371f,	0.982f,  0.099f,  0.879f
+		0.673f,  0.211f,  0.457f,	0.820f,  0.883f,  0.371f,	0.982f,  0.099f,  0.879f*/
+
+		0, 0, 1, 0, 1, 1,
+		1, 1, 0, 0, 1, 0,
+		1, 1, 0, 0, 1, 0,
+		1, 1, 1, 0, 0, 0,
+		0, 0, 1, 1, 0, 1,
+		1, 1, 1, 0, 0, 0,
+		0, 1, 1, 1, 1, 0,
+		1, 0, 0, 1, 1, 1,
+		0, 1, 1, 0, 0, 0,
+		0, 1, 1, 1, 1, 0,
+		0, 1, 1, 0, 0, 0,
+		1, 0, 0, 0, 1, 1
 	};
 
 	glGenBuffers(1, &colorbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0); // Kein Disable ausführen !   --_> hier wird Kanal 0 freigeschaltet
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -140,7 +153,7 @@ static void createCube()
 	glEnableVertexAttribArray(1); // Kein Disable ausführen ! sozusagen anlegen des kanals
 	glVertexAttribPointer(
 			1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-			3,                                // size
+			2,                                // size
 			GL_FLOAT,                         // type
 			GL_FALSE,                         // normalized?
 			0,                                // stride
