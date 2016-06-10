@@ -6,6 +6,7 @@
 #include <iostream>
 // Include GLEW
 #include <GL/glew.h>
+#include <time.h>
 
 // Include GLFW
 #include <GLFW/glfw3.h>
@@ -27,6 +28,7 @@ using namespace glm;
 // Wuerfel und Kugel
 #include "objects.hpp"
 #include <string>
+#include <ctime>
 
 // Erklären ObenGL-Statemachine, lowlevel
 // Version 1: seit 1992, elegantes API für die Plattformunabhägige 3D-Programmierung 
@@ -305,11 +307,7 @@ struct stein {
 				}
 			}
 			break;
-		case('y'):
-			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
-				it->koordinate.y += richtung;
-			}
-			break;
+		
 		case ('z'):
 			for (std::vector<cube>::iterator it = cube_elems.begin(); it != cube_elems.end(); ++it) {
 				it->koordinate.z += richtung;
@@ -379,9 +377,33 @@ struct stein {
 	}
 
 };
-stein *falling = new stein(2, green);
+stein *falling = new stein(2, blue);
 
 
+void dropStein( int value) {
+	
+	for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) {
+		it->koordinate.y += value;
+	}
+	if (falling->inside_arena() == false || falling->cube_free() == false) {
+		for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) {
+			it->koordinate.y -= value;
+		}
+		falling->kopiere_in_schacht();
+		srand(time(NULL));
+		int	randStone = rand() % 4 + 1;
+		int randColor = rand() % 5;
+		falling = new stein(randStone, color(randColor));
+	}
+}
+void turboDrop() {
+	for (int i = 0; i < yLen; i++) {
+	//	while (falling->inside_arena() == true || falling->cube_free() == true) {
+			dropStein(-1);
+		//}
+		break;
+	}
+}
 
 
 float cus = 1.;			// cube-unit-size
@@ -545,7 +567,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	case GLFW_KEY_G:
 		falling->drehen('z', false);
 		break;
-
+	case GLFW_KEY_O:
+		turboDrop();
+		break;
 	default:
 		break;
 	}
@@ -680,6 +704,11 @@ int main(void)
 	// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(glGetUniformLocation(programID, "myTextureSampler"), 0);
 	initSchacht();
+	falling->kopiere_in_schacht();
+	time_t start = time(0);
+	time_t end;
+	double timeStep = .8;
+	srand(time(NULL));
 	// Eventloop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -691,8 +720,8 @@ int main(void)
 		Projection = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f); //Stichpunkt: Frontplane und Backplane
 		
 		// Camera matrix, ---- hier linkshändig (manipulierbar durch erste zeile. wenn positiver z wert dann rechtshändig
-		View = glm::lookAt(glm::vec3(0,60,-60 +zoom), // Camera is at (0,0,-10), in World Space
-						   glm::vec3(xLen,yLen/4,zLen),  // and looks at the origin---- bildschirmmitte
+		View = glm::lookAt(glm::vec3(0, 0,-60 +zoom), // Camera is at (0,0,-10), in World Space
+						   glm::vec3(xLen,-2,zLen),  // and looks at the origin---- bildschirmmitte
 						   glm::vec3(0,1,0)); // Head is up (set to 0,-1,0 to look upside-down) ---- in welche richtung gehts nach oben
 		
 		
@@ -752,6 +781,11 @@ int main(void)
 		drawTiles(); 
 		drawWallX();
 		draw();
+		end = time(0);
+		if (end - start > timeStep) {
+			start = time(0);
+			dropStein(-1);
+		}
 		//drawCube();
 
 	
