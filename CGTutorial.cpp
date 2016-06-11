@@ -168,7 +168,7 @@ void sendMVP()
 //------------------------------------------------------------------ New Code Ben
 enum color { transparent, red, blue, green, yellow, black, white };
 const int xLen = 6;
-const int yLen =12;
+const int yLen = 12;
 const int zLen = 6;
 
 
@@ -180,13 +180,13 @@ struct cube {
 	cube::cube(int x, int y, int z, color c) {
 		koordinate = vec3(x, y, z);
 		col = c;
-		
+
 	}
 
 	cube::cube() {
 		koordinate = vec3(xLen, yLen, zLen);
 		this->col = transparent;
-		
+
 	}
 
 	vec3 getKoor() {
@@ -234,8 +234,9 @@ struct cube {
 };
 
 std::vector <cube> schacht_liste; //Brauchen wir wahrscheinllich nicht
-std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array = { {{}} };
-std::array< std::array< std::array<color, zLen >, yLen >, xLen > testschacht;
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array;
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > old_schacht;
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > fresh_schacht;
 void initSchacht() {
 	for (int i = 0; i < xLen; i++) {
 		for (int j = 0; j < yLen; j++) {
@@ -451,14 +452,12 @@ struct compareVec3 {
 		else if (a.z != b.z) {
 			return a.z < b.z;
 		}
-		else 
+		else
 			return a.x < b.x;
-		}
+	}
 };
 
-std::set<vec3, compareVec3> fullLines;
-
-void completedLines() {
+std::set<vec3, compareVec3> completedLines() {
 	std::set<glm::vec3, compareVec3> vanishing_cubes;
 	int xline = 0;
 	int zline = 0;
@@ -466,38 +465,40 @@ void completedLines() {
 	for (int y = 1; y <= yLen; y++) {
 		for (int x = 1; x <= xLen; x++) {
 			for (int z = 1; z <= zLen; z++) {
-				if (schacht_array[x-1][y-1][z-1] != transparent) {
+				if (schacht_array[x - 1][y - 1][z - 1] != transparent) {
 					zline += 1;
 				}
-				if (zline == zLen) {
-					for (int i = 1; i <= zLen; i++) {
-						fullLines.insert(glm::vec3(x, y, i));
-
-					}
-				}
-				zline = 0;
 			}
+			if (zline == zLen) {
+				for (int i = 1; i <= zLen; i++) {
+					vanishing_cubes.insert(glm::vec3(x, y, i));
+
+				}
+			}
+			zline = 0;
+
 		}
 		for (int z = 1; z <= zLen; z++) {
 			for (int x = 1; x <= xLen; x++) {
-				if (schacht_array[x-1][y-1][z-1] != transparent) {
+				if (schacht_array[x - 1][y - 1][z - 1] != transparent) {
 					xline += 1;
 				}
-
-				if (xline == xLen) {
-					for (int i = 1; i <= xLen; i++) {
-						fullLines.insert(glm::vec3(i, y, z));
-					}
-				}
-				xline = 0;
 			}
+			if (xline == xLen) {
+				for (int i = 1; i <= xLen; i++) {
+					vanishing_cubes.insert(glm::vec3(i, y, z));
+				}
+			}
+			xline = 0;
 		}
+
 	}
-	
+	return vanishing_cubes;
 }
 
 void deleteCompleteLines(std::set<vec3, compareVec3> delcubes) {
-	std::set<vec3,compareVec3>::iterator it;
+	std::set<vec3, compareVec3>::iterator it;
+	old_schacht=schacht_array;
 	for (it = delcubes.begin(); it != delcubes.end(); ++it)
 	{
 		int x = it->x;
@@ -505,9 +506,10 @@ void deleteCompleteLines(std::set<vec3, compareVec3> delcubes) {
 		int z = it->z;
 
 		for (int i = y; i < yLen; i++) {
-			schacht_array[x-1][i-1][z-1] = schacht_array[x-1][i ][z-1];
+			schacht_array[x - 1][i - 1][z - 1] = schacht_array[x - 1][i][z - 1];
 		}
-		schacht_array[x-1][yLen-1][z-1] = transparent;
+		schacht_array[x - 1][yLen - 1][z - 1] = transparent;
+		fresh_schacht = schacht_array;
 	}
 }
 
@@ -843,22 +845,20 @@ int main(void)
 			glUniform3f(glGetUniformLocation(programID, "LightPosition_worldspace"), lightPos.x, lightPos.y, lightPos.z);
 	*/
 
-		
-		//	drawWallX();
+
+	//	drawWallX();
 		drawTiles();
 		draw();
 		end = time(0);
-		completedLines();
-	
+		deleteCompleteLines(completedLines());
+		
 		if (end - start > timeStep) {
 			start = time(0);
 			dropStein(-1);
 		}
-		if (end - start2 > 15) {
-			deleteCompleteLines(fullLines);
-			start2 = time(0);
-		}
-		
+
+
+
 		//drawCube();
 
 
