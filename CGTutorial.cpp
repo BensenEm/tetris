@@ -7,6 +7,7 @@
 // Include GLEW
 #include <GL/glew.h>
 #include <time.h>
+#include <set>
 
 // Include GLFW
 #include <GLFW/glfw3.h>
@@ -165,34 +166,27 @@ void sendMVP()
 
 //------------------------------------------------------------------
 //------------------------------------------------------------------ New Code Ben
-enum color { red, blue, green, yellow, black, white, transparent };
-const int xLen = 12;
-const int yLen = 24;
-const int zLen = 12;
+enum color { transparent, red, blue, green, yellow, black, white };
+const int xLen = 6;
+const int yLen =12;
+const int zLen = 6;
 
-//struct SchachtbelegtException {
-//	int message;
-//
-//	SchachtbelegtException::SchachtbelegtException() 
-//		:message(4){
-//	}
-//};
+
 
 struct cube {
 	vec3 koordinate;
 	color col;
-	bool exists;
 
 	cube::cube(int x, int y, int z, color c) {
 		koordinate = vec3(x, y, z);
 		col = c;
-		exists = false;
+		
 	}
 
 	cube::cube() {
 		koordinate = vec3(xLen, yLen, zLen);
 		this->col = transparent;
-		exists = false;
+		
 	}
 
 	vec3 getKoor() {
@@ -240,7 +234,8 @@ struct cube {
 };
 
 std::vector <cube> schacht_liste; //Brauchen wir wahrscheinllich nicht
-std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array = { { {} } };
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array = { {{}} };
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > testschacht;
 void initSchacht() {
 	for (int i = 0; i < xLen; i++) {
 		for (int j = 0; j < yLen; j++) {
@@ -379,7 +374,6 @@ struct stein {
 };
 stein *falling = new stein();
 
-
 void dropStein(int value) {
 
 	for (std::vector<cube>::iterator it = falling->cube_elems.begin(); it != falling->cube_elems.end(); ++it) {
@@ -393,7 +387,7 @@ void dropStein(int value) {
 		srand(time(NULL));
 		int	randStone = rand() % 4 + 1;
 		int randColor = rand() % 5;
-		falling = new stein(randStone, color(randColor));
+		falling = new stein(randStone, white);
 	}
 }
 void turboDrop() {
@@ -448,38 +442,74 @@ void drawWallX() {
 	Model = Save;
 
 }
-void completeLines() {
-	std::vector<vec2> xLines;
-	std::vector<vec2> zLines;
+
+struct compareVec3 {
+	bool operator() (vec3 const &a, vec3 const &b) {
+		if (a.y != b.y) {
+			return a.y < b.y;
+		}
+		else if (a.z != b.z) {
+			return a.z < b.z;
+		}
+		else 
+			return a.x < b.x;
+		}
+};
+
+std::set<vec3, compareVec3> fullLines;
+
+void completedLines() {
+	std::set<glm::vec3, compareVec3> vanishing_cubes;
 	int xline = 0;
 	int zline = 0;
+
 	for (int y = 1; y <= yLen; y++) {
 		for (int x = 1; x <= xLen; x++) {
 			for (int z = 1; z <= zLen; z++) {
-				if (schacht_array[x][y][z] != transparent) {
+				if (schacht_array[x-1][y-1][z-1] != transparent) {
 					zline += 1;
 				}
 				if (zline == zLen) {
-					zLines.push_back(vec2(x, y));
+					for (int i = 1; i <= zLen; i++) {
+						fullLines.insert(glm::vec3(x, y, i));
+
+					}
 				}
+				zline = 0;
 			}
 		}
-	}
-
-	for (int y = 1; y <= yLen; y++) {
-		for (int x = 1; x <= zLen; x++) {
-			for (int z = 1; z <= xLen; z++) {
-				if (schacht_array[x][y][z] != transparent) {
+		for (int z = 1; z <= zLen; z++) {
+			for (int x = 1; x <= xLen; x++) {
+				if (schacht_array[x-1][y-1][z-1] != transparent) {
 					xline += 1;
 				}
+
 				if (xline == xLen) {
-					xLines.push_back(vec2(y,z));
+					for (int i = 1; i <= xLen; i++) {
+						fullLines.insert(glm::vec3(i, y, z));
+					}
 				}
+				xline = 0;
 			}
 		}
 	}
+	
 }
 
+void deleteCompleteLines(std::set<vec3, compareVec3> delcubes) {
+	std::set<vec3,compareVec3>::iterator it;
+	for (it = delcubes.begin(); it != delcubes.end(); ++it)
+	{
+		int x = it->x;
+		int y = it->y;
+		int z = it->z;
+
+		for (int i = y; i < yLen; i++) {
+			schacht_array[x-1][i-1][z-1] = schacht_array[x-1][i ][z-1];
+		}
+		schacht_array[x-1][yLen-1][z-1] = transparent;
+	}
+}
 
 void draw() {								//Zeichnet den Schacht
 
@@ -520,11 +550,7 @@ void draw() {								//Zeichnet den Schacht
 	Model = Save;
 
 }
-//class KeyboardListener {
-//	void OnKeyEvent(const KeyEvent &evt) {
-//
-//	}
-//};
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 
@@ -678,7 +704,6 @@ int main(void)
 	glm::vec3 lightPos = glm::vec3(4, 4, -2);
 
 
-
 	// Jedes Objekt eigenem VAO zuordnen, damit mehrere Objekte moeglich sind
 	// VAOs sind Container fuer mehrere Buffer, die zusammen gesetzt werden sollen.
 	GLuint VertexArrayIDTeapot;
@@ -717,7 +742,7 @@ int main(void)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 	// Load the texture
-	GLuint Texture = loadBMP_custom("mandrill.bmp");
+	GLuint Texture = loadBMP_custom("standardtextur.bmp");
 
 	// Auf Keyboard-Events reagieren
 	glfwSetKeyCallback(window, key_callback);
@@ -744,10 +769,11 @@ int main(void)
 
 		// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(glGetUniformLocation(programID, "myTextureSampler"), 0);
-	initSchacht();
+	//initSchacht();
 	time_t start = time(0);
+	time_t start2 = time(0);
 	time_t end;
-	double timeStep = .8;
+	double timeStep = 3.8;
 	srand(time(NULL));
 	// Eventloop
 	while (!glfwWindowShouldClose(window))
@@ -820,13 +846,19 @@ int main(void)
 		
 		//	drawWallX();
 		drawTiles();
-
 		draw();
 		end = time(0);
+		completedLines();
+	
 		if (end - start > timeStep) {
 			start = time(0);
 			dropStein(-1);
 		}
+		if (end - start2 > 15) {
+			deleteCompleteLines(fullLines);
+			start2 = time(0);
+		}
+		
 		//drawCube();
 
 
