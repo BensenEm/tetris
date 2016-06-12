@@ -170,6 +170,8 @@ enum color { transparent, red, blue, green, yellow, black, white };
 const int xLen = 6;
 const int yLen = 12;
 const int zLen = 6;
+bool blinkFlag = false;
+bool blinkFlag2 = false;
 
 
 
@@ -234,9 +236,10 @@ struct cube {
 };
 
 std::vector <cube> schacht_liste; //Brauchen wir wahrscheinllich nicht
-std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array;
-std::array< std::array< std::array<color, zLen >, yLen >, xLen > old_schacht;
-std::array< std::array< std::array<color, zLen >, yLen >, xLen > fresh_schacht;
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > schacht_array;			//der hauptschacht der auch gezeichnet wird
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > uebergangs_schacht;	//der schacht in dem vollständige linien gelöscht sind (ohne nachrücken)
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > fresh_schacht;			//der schacht nach aktualisierung 
+std::array< std::array< std::array<color, zLen >, yLen >, xLen > old_schacht;			//der schacht vor beginn einer löschaktion 
 void initSchacht() {
 	for (int i = 0; i < xLen; i++) {
 		for (int j = 0; j < yLen; j++) {
@@ -493,12 +496,27 @@ std::set<vec3, compareVec3> completedLines() {
 		}
 
 	}
+	if (vanishing_cubes.empty() == false) {
+		blinkFlag = true;
+		blinkFlag2 = true;
+	}
 	return vanishing_cubes;
 }
 
+/*
+Überschreibt gelöschte cubes mit den von oben nachrückenden cubes
+*/
 void deleteCompleteLines(std::set<vec3, compareVec3> delcubes) {
+
+	old_schacht = schacht_array;
+	uebergangs_schacht = schacht_array;
+	std::set<vec3, compareVec3>::iterator it1;
+	for (it1 = delcubes.begin(); it1 != delcubes.end(); ++it1) {
+		uebergangs_schacht[(it1->x) - 1][(it1->y) - 1][(it1->z) - 1] = transparent;
+	}
+
 	std::set<vec3, compareVec3>::iterator it;
-	old_schacht=schacht_array;
+	fresh_schacht = schacht_array;
 	for (it = delcubes.begin(); it != delcubes.end(); ++it)
 	{
 		int x = it->x;
@@ -506,12 +524,13 @@ void deleteCompleteLines(std::set<vec3, compareVec3> delcubes) {
 		int z = it->z;
 
 		for (int i = y; i < yLen; i++) {
-			schacht_array[x - 1][i - 1][z - 1] = schacht_array[x - 1][i][z - 1];
+			fresh_schacht[x - 1][i - 1][z - 1] = fresh_schacht[x - 1][i][z - 1];
 		}
-		schacht_array[x - 1][yLen - 1][z - 1] = transparent;
-		fresh_schacht = schacht_array;
+		fresh_schacht[x - 1][yLen - 1][z - 1] = transparent;
 	}
+	blinkFlag = false;
 }
+
 
 void draw() {								//Zeichnet den Schacht
 
@@ -774,7 +793,9 @@ int main(void)
 	//initSchacht();
 	time_t start = time(0);
 	time_t start2 = time(0);
-	time_t end;
+	time_t end = time(0);
+	time_t end2 = time(0);
+	float mult = 2.;
 	double timeStep = 3.8;
 	srand(time(NULL));
 	// Eventloop
@@ -846,29 +867,54 @@ int main(void)
 	*/
 
 
-	//	drawWallX();
 		drawTiles();
 		draw();
 		end = time(0);
-		deleteCompleteLines(completedLines());
-		
+		completedLines();
+		if (blinkFlag) {
+			deleteCompleteLines(completedLines());
+		}
+		if (blinkFlag2) {
+			if (end - start <= mult * 0.5) {
+				schacht_array = uebergangs_schacht;
+				end = time(0);
+			}
+			else if (((end - start) > mult * 0.5) && ((end - start) < mult * 1)) {
+				schacht_array = old_schacht;
+				end = time(0);
+			}
+			else if (((end - start) >= mult * 1) && ((end - start) < mult * 1.5)) {
+				schacht_array = uebergangs_schacht;
+				end = time(0);
+			}
+			else if (((end - start) >= mult * 1.5) && ((end - start) < mult * 2)) {
+				schacht_array = old_schacht;
+				end = time(0);
+			}
+			else if (((end - start) >= mult * 2) && ((end - start) < mult * 2.5)) {
+				schacht_array = uebergangs_schacht;
+				end = time(0);
+			}
+			else {
+				schacht_array = fresh_schacht;
+				blinkFlag2 = false;
+
+			}
+		}
+
 		if (end - start > timeStep) {
 			start = time(0);
 			dropStein(-1);
 		}
-
-
-
-		//drawCube();
-
-
-		// Swap buffers
-		glfwSwapBuffers(window);
-
-		// Poll for and process events 
-		glfwPollEvents();
-
 	}
+
+	// Swap buffers
+	glfwSwapBuffers(window);
+
+	// Poll for and process events 
+	glfwPollEvents();
+
+
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &normalbuffer);
 
