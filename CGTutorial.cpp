@@ -391,7 +391,7 @@ void dropStein(int value) {
 		srand(time(NULL));
 		int	randStone = rand() % 4 + 1;
 		int randColor = rand() % 5;
-		falling = new stein(randStone, white);
+		falling = new stein(1, white);
 	}
 }
 void turboDrop() {
@@ -502,33 +502,41 @@ std::set<vec3, compareVec3> completedLines() {
 	}
 	return vanishing_cubes;
 }
+	time_t start = time(0);
+	time_t end = time(0);
 
 /*
 Überschreibt gelöschte cubes mit den von oben nachrückenden cubes
 */
 void deleteCompleteLines(std::set<vec3, compareVec3> delcubes) {
-
+	blinkFlag = false;
+	
+	
 	old_schacht = schacht_array;
 	uebergangs_schacht = schacht_array;
+	
 	std::set<vec3, compareVec3>::iterator it1;
 	for (it1 = delcubes.begin(); it1 != delcubes.end(); ++it1) {
 		uebergangs_schacht[(it1->x) - 1][(it1->y) - 1][(it1->z) - 1] = transparent;
 	}
 
-	std::set<vec3, compareVec3>::iterator it;
+	std::set<vec3, compareVec3>::reverse_iterator it;
 	fresh_schacht = schacht_array;
-	for (it = delcubes.begin(); it != delcubes.end(); ++it)
+	for (it = delcubes.rbegin(); it != delcubes.rend(); ++it)
 	{
 		int x = it->x;
 		int y = it->y;
 		int z = it->z;
 
-		for (int i = y; i < yLen; i++) {
+		for (int i = y; i < yLen; ++i) {
 			fresh_schacht[x - 1][i - 1][z - 1] = fresh_schacht[x - 1][i][z - 1];
 		}
 		fresh_schacht[x - 1][yLen - 1][z - 1] = transparent;
+
 	}
-	blinkFlag = false;
+	start = time(0);
+	end = time(0);
+
 }
 
 
@@ -791,9 +799,7 @@ int main(void)
 		// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(glGetUniformLocation(programID, "myTextureSampler"), 0);
 	//initSchacht();
-	time_t start = time(0);
 	time_t start2 = time(0);
-	time_t end = time(0);
 	time_t end2 = time(0);
 	float mult = 2.;
 	double timeStep = 3.8;
@@ -826,94 +832,81 @@ int main(void)
 		glm::mat4 Save = Model;
 		//	Model = glm::scale(Model, glm::vec3(1.0 / 1000.0, 1.0 / 1000.0, 1.0 / 1000.0));
 
-		//
-
-		//	
-		//	// sendet Projection, Model, View an Grafikkarte
-		//	// Hier kommt der Teapot rein
-		//	//glBindVertexArray(VertexArrayIDTeapot);
-		//	//glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-		//	Model = Save;
 		sendMVP();
-		//	drawCube();		//oder 
-		//	
-		//	//drawWireCube();
-		//	
-		//	// Hier kommt die Kugeldazu
-		//	Model = Save;
-		//	Model = glm::scale(Model, glm::vec3(0.5, 0.5, 0.5));
-		//	sendMVP();
-		//	//drawSphere(10, 10);
-		//	drawCS(f1);
-		//	drawCS(f2);
-		//	drawCS(f3);
 
-			/*Model = glm::rotate(Model, turnY, glm::vec3(0, 1, 0));
-			Model = glm::rotate(Model, turnX, glm::vec3(1, 0, 0));
-			Model = glm::rotate(Model, turnZ, glm::vec3(0, 0, 1));
-			drawRobSeg(0.5);
-			Model= glm::translate(Model, glm::vec3(0, 0.5, 0));
-			Model = glm::rotate(Model, turnY1, glm::vec3(0, 1, 0));
-			Model = glm::rotate(Model, turnX1, glm::vec3(1, 0, 0));
-			Model = glm::rotate(Model, turnZ1, glm::vec3(0, 0, 1));
-			drawRobSeg(0.4);
-			Model= glm::translate(Model, glm::vec3(0, 0.4, 0));
-			Model = glm::rotate(Model, turnY2, glm::vec3(0, 1, 0));
-			Model = glm::rotate(Model, turnX2, glm::vec3(1, 0, 0));
-			Model = glm::rotate(Model, turnZ2, glm::vec3(0, 0, 1));
-			drawRobSeg(0.3);
-			glm::vec4 lightPos = Model*glm::vec4(0, 0.3, 0, 1);
-			glUniform3f(glGetUniformLocation(programID, "LightPosition_worldspace"), lightPos.x, lightPos.y, lightPos.z);
-	*/
 
 
 		drawTiles();
 		draw();
-		end = time(0);
+		if (blinkFlag2 == false) {
+			if (end2 - start2 > timeStep) {
+				start2 = time(0);
+				dropStein(-1);
+			}
+			end2 = time(0);
 		completedLines();
+		}
 		if (blinkFlag) {
 			deleteCompleteLines(completedLines());
+			//schacht_array = fresh_schacht;
+			//blinkFlag2 = false;
 		}
 		if (blinkFlag2) {
-			if (end - start <= mult * 0.5) {
+			//start = time(0);
+			//end = time(0);
+			if (end - start ==0){
+				std::cout << "null" << "     " << end - start<<std::endl;
 				schacht_array = uebergangs_schacht;
 				end = time(0);
 			}
-			else if (((end - start) > mult * 0.5) && ((end - start) < mult * 1)) {
+			
+			else if (((end - start) == 1)) {
+				std::cout << "eins" << "     " << end - start<<std::endl;
 				schacht_array = old_schacht;
+				
+
 				end = time(0);
+
 			}
-			else if (((end - start) >= mult * 1) && ((end - start) < mult * 1.5)) {
+
+			else if (((end - start) == 2)) {
+				std::cout << "zwei" << "     " << end - start << std::endl;
 				schacht_array = uebergangs_schacht;
 				end = time(0);
 			}
-			else if (((end - start) >= mult * 1.5) && ((end - start) < mult * 2)) {
+			
+			else if (((end - start) == 3)) {
+				std::cout << "drei" << "     " << end - start << std::endl;
 				schacht_array = old_schacht;
 				end = time(0);
+
 			}
-			else if (((end - start) >= mult * 2) && ((end - start) < mult * 2.5)) {
+
+			else if (((end - start) == 4)) {
+				std::cout << "vier" << "     " << end - start << std::endl;
 				schacht_array = uebergangs_schacht;
 				end = time(0);
 			}
 			else {
 				schacht_array = fresh_schacht;
+				std::cout << "final" << "     " << end - start << std::endl;
+				end = time(0);
+				start = time(0);
 				blinkFlag2 = false;
-
 			}
+
+
 		}
 
-		if (end - start > timeStep) {
-			start = time(0);
-			dropStein(-1);
-		}
+
+
+
+		// Swap buffers
+		glfwSwapBuffers(window);
+
+		// Poll for and process events 
+		glfwPollEvents();
 	}
-
-	// Swap buffers
-	glfwSwapBuffers(window);
-
-	// Poll for and process events 
-	glfwPollEvents();
-
 
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &normalbuffer);
